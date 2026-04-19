@@ -2,7 +2,7 @@ import logging
 import os
 from pathlib import Path
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 
 from .db import db
@@ -46,10 +46,12 @@ def create_app(test_config: dict | None = None) -> Flask:
     CORS(
         app,
         resources={
-            r"/api/*": {
+            r"/*": {
                 "origins": resolve_cors_origins(),
             }
         },
+        allow_headers=["Content-Type"],
+        methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     )
 
     db.init_app(app)
@@ -58,6 +60,22 @@ def create_app(test_config: dict | None = None) -> Flask:
         db.create_all()
 
     app.register_blueprint(api, url_prefix="/api")
+
+    @app.after_request
+    def add_cors_headers(response):
+        if request.path.startswith("/api/"):
+            origin = request.headers.get("Origin", "")
+            allowed_origins = resolve_cors_origins()
+
+            if allowed_origins == "*":
+                response.headers["Access-Control-Allow-Origin"] = "*"
+            elif origin and origin in allowed_origins:
+                response.headers["Access-Control-Allow-Origin"] = origin
+
+            response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+            response.headers["Access-Control-Allow-Methods"] = "GET,POST,PATCH,DELETE,OPTIONS"
+
+        return response
 
     @app.get("/health")
     def healthcheck():
