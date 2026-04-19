@@ -9,6 +9,15 @@ from .db import db
 from .routes import api
 
 
+def resolve_cors_origins() -> list[str] | str:
+    configured = os.getenv("FRONTEND_ORIGIN", "").strip()
+    if not configured:
+        return "*"
+
+    origins = [origin.strip() for origin in configured.split(",") if origin.strip()]
+    return origins or "*"
+
+
 def create_app(test_config: dict | None = None) -> Flask:
     app = Flask(__name__)
 
@@ -38,7 +47,7 @@ def create_app(test_config: dict | None = None) -> Flask:
         app,
         resources={
             r"/api/*": {
-                "origins": os.getenv("FRONTEND_ORIGIN", "http://localhost:5173"),
+                "origins": resolve_cors_origins(),
             }
         },
     )
