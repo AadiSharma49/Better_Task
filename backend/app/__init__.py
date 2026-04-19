@@ -13,7 +13,10 @@ def create_app(test_config: dict | None = None) -> Flask:
     app = Flask(__name__)
 
     base_dir = Path(__file__).resolve().parent.parent
-    default_db_path = base_dir / "data" / "tasks.db"
+    if os.getenv("VERCEL"):
+        default_db_path = Path("/tmp") / "pulseboard-tasks.db"
+    else:
+        default_db_path = base_dir / "data" / "tasks.db"
     default_db_path.parent.mkdir(parents=True, exist_ok=True)
 
     app.config.update(
