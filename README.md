@@ -138,6 +138,31 @@ npm run lint
 npm run build
 ```
 
+## Deployment
+
+Recommended assessment deployment:
+
+- Frontend on Vercel
+- Backend on Render
+
+This split is the safest fit for the current codebase because the frontend is static and Vercel handles it well, while the Flask API benefits from a persistent backend host. The app currently uses SQLite, so if you deploy the backend on Render without a persistent disk, data will reset on redeploys or restarts because Render documents that its filesystem is ephemeral by default.
+
+### Frontend Environment Variables
+
+- `VITE_API_BASE_URL`
+  - Example: `https://your-backend.onrender.com`
+
+### Backend Environment Variables
+
+- `FRONTEND_ORIGIN`
+  - Example: `https://your-frontend.vercel.app`
+
+### Backend Start Command
+
+```bash
+gunicorn --bind 0.0.0.0:$PORT run:app
+```
+
 ## AI Usage
 
 AI was used to accelerate scaffolding, implementation, and documentation. All generated code was reviewed, adjusted, and verified through local tests and builds. Guidance constraints are documented in [AGENTS.md](AGENTS.md).

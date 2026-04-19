@@ -33,6 +33,8 @@ type TaskForm = {
   due_date: string
 }
 
+const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '')
+
 const initialForm: TaskForm = {
   title: '',
   description: '',
@@ -76,6 +78,14 @@ async function readJson<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
   }
 
   return (await response.json()) as T
+}
+
+function apiUrl(path: string): string {
+  if (!apiBaseUrl) {
+    return path
+  }
+
+  return `${apiBaseUrl}${path}`
 }
 
 function formatDate(dateValue: string | null): string {
@@ -128,8 +138,8 @@ function App() {
       }
 
       const [tasksResponse, summaryResponse] = await Promise.all([
-        readJson<Task[]>(`/api/tasks${query.size > 0 ? `?${query.toString()}` : ''}`),
-        readJson<DashboardSummary>('/api/dashboard'),
+        readJson<Task[]>(apiUrl(`/api/tasks${query.size > 0 ? `?${query.toString()}` : ''}`)),
+        readJson<DashboardSummary>(apiUrl('/api/dashboard')),
       ])
 
       setTasks(tasksResponse)
@@ -184,13 +194,13 @@ function App() {
 
     try {
       if (editingTaskId === null) {
-        await readJson<Task>('/api/tasks', {
+        await readJson<Task>(apiUrl('/api/tasks'), {
           method: 'POST',
           body: JSON.stringify(payload),
         })
         setStatusMessage('Task created successfully.')
       } else {
-        await readJson<Task>(`/api/tasks/${editingTaskId}`, {
+        await readJson<Task>(apiUrl(`/api/tasks/${editingTaskId}`), {
           method: 'PATCH',
           body: JSON.stringify(payload),
         })
@@ -210,7 +220,7 @@ function App() {
     setErrorMessage('')
 
     try {
-      await readJson<void>(`/api/tasks/${taskId}`, { method: 'DELETE' })
+      await readJson<void>(apiUrl(`/api/tasks/${taskId}`), { method: 'DELETE' })
 
       if (editingTaskId === taskId) {
         resetForm()
